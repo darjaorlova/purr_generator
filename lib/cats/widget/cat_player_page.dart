@@ -12,7 +12,9 @@ class CatPlayerPage extends StatefulWidget {
 }
 
 class _CatPlayerPageState extends State<CatPlayerPage> {
-  static const platform = MethodChannel('flutter_purr_channel');
+  static const methodChannel = MethodChannel('flutter_purr_channel');
+  static const eventChannel = EventChannel('flutter_purr_event_channel');
+
   bool _playing = false;
   bool _looping = false;
   double _progress = 0.0;
@@ -21,21 +23,20 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
   void initState() {
     super.initState();
 
-    platform.setMethodCallHandler((call) async {
-      switch (call.method) {
-        case 'updateProgress':
-          final progress = call.arguments as double;
-          setState(() {
-            _progress = progress;
-          });
-          break;
-        case 'complete':
-          setState(() {
-            _playing = false;
-            _progress = 0.0;
-          });
-          break;
+    eventChannel.receiveBroadcastStream().listen((dynamic event) {
+      if (event == "complete") {
+        setState(() {
+          _playing = false;
+          _progress = 0.0;
+        });
+      } else if (event.startsWith("progress:")) {
+        final progressValue = double.parse(event.split(":")[1]);
+        setState(() {
+          _progress = progressValue;
+        });
       }
+    }, onError: (dynamic error) {
+      print('Received error: ${error.message}');
     });
   }
 
@@ -118,9 +119,9 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
 
   Future<void> _triggerPlayer() async {
     if (_playing) {
-      await platform.invokeMethod('stop');
+      await methodChannel.invokeMethod('stop');
     } else {
-      await platform.invokeMethod('play');
+      await methodChannel.invokeMethod('play');
     }
 
     setState(() {
@@ -129,7 +130,7 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
   }
 
   void _toggleLoop() {
-    platform.invokeMethod('loop', {'looping': !_looping});
+    methodChannel.invokeMethod('loop', {'looping': !_looping});
     setState(() {
       _looping = !_looping;
     });
