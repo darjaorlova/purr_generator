@@ -18,6 +18,28 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
   double _progress = 0.0;
 
   @override
+  void initState() {
+    super.initState();
+
+    platform.setMethodCallHandler((call) async {
+      switch (call.method) {
+        case 'updateProgress':
+          final progress = call.arguments as double;
+          setState(() {
+            _progress = progress;
+          });
+          break;
+        case 'complete':
+          setState(() {
+            _playing = false;
+            _progress = 0.0;
+          });
+          break;
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -26,9 +48,12 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/${widget.cat.filePrefix}.jpg',
-              fit: BoxFit.cover,
+            child: Hero(
+              tag: widget.cat.name,
+              child: Image.asset(
+                'assets/images/${widget.cat.filePrefix}.jpg',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           ColorFiltered(
@@ -48,17 +73,28 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    FloatingActionButton(
-                      onPressed: () => _triggerPlayer(),
-                      tooltip: _playing ? 'Pause' : 'Play',
-                      child: Icon(_playing ? Icons.pause : Icons.play_arrow),
+                    InkWell(
+                      onTap: () => _triggerPlayer(),
+                      child: CircleAvatar(
+                        backgroundColor: Theme.of(context).colorScheme.secondary,
+                        radius: 28.0,
+                        child: Icon(
+                          _playing ? Icons.stop : Icons.play_arrow,
+                          color: Theme.of(context).iconTheme.color,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 20.0),
-                    FloatingActionButton(
-                      onPressed: () => _toggleLoop(),
-                      tooltip: 'Loop',
-                      backgroundColor: _looping ? Colors.teal : Colors.grey,
-                      child: const Icon(Icons.loop),
+                    InkWell(
+                      onTap: () => _toggleLoop(),
+                      child: CircleAvatar(
+                        backgroundColor: _looping ? Colors.teal : Colors.grey,
+                        radius: 28.0,
+                        child: const Icon(
+                          Icons.loop,
+                          color: Colors.black,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -75,20 +111,6 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
               ],
             ),
           ),
-          /*Positioned(
-            left: 20.0,
-            right: 20.0,
-            bottom: 20.0,
-            child: Text(
-              widget.cat.description,
-              style: Theme.of(context).textTheme.subtitle2?.copyWith(
-                color: Colors.white.withOpacity(0.4),
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 8,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),*/
         ],
       ),
     );
@@ -96,7 +118,7 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
 
   Future<void> _triggerPlayer() async {
     if (_playing) {
-      await platform.invokeMethod('pause');
+      await platform.invokeMethod('stop');
     } else {
       await platform.invokeMethod('play');
     }
@@ -107,6 +129,7 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
   }
 
   void _toggleLoop() {
+    platform.invokeMethod('loop', {'looping': !_looping});
     setState(() {
       _looping = !_looping;
     });
