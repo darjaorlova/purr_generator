@@ -24,6 +24,9 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
     super.initState();
 
     eventChannel.receiveBroadcastStream().listen((dynamic event) {
+      if (event == null) {
+        return;
+      }
       if (event == "complete") {
         setState(() {
           _playing = false;
