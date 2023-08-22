@@ -12,6 +12,7 @@
 		6FF5EA832A94F62B00BFC467 /* vasja.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6FF5EA802A94F62B00BFC467 /* vasja.m4a */; };
 		6FF5EA842A94F62B00BFC467 /* charlie.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6FF5EA812A94F62B00BFC467 /* charlie.m4a */; };
 		6FF5EA852A94F62B00BFC467 /* rjaba.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6FF5EA822A94F62B00BFC467 /* rjaba.m4a */; };
+		6FF5EA872A95070D00BFC467 /* MediaPlayerApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FF5EA862A95070D00BFC467 /* MediaPlayerApi.swift */; };
 		6FFC8D602A8BE96B00866A98 /* purr.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6FFC8D5F2A8BE96B00866A98 /* purr.mp3 */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
@@ -39,6 +40,7 @@
 		6FF5EA802A94F62B00BFC467 /* vasja.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = vasja.m4a; sourceTree = "<group>"; };
 		6FF5EA812A94F62B00BFC467 /* charlie.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = charlie.m4a; sourceTree = "<group>"; };
 		6FF5EA822A94F62B00BFC467 /* rjaba.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = rjaba.m4a; sourceTree = "<group>"; };
+		6FF5EA862A95070D00BFC467 /* MediaPlayerApi.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaPlayerApi.swift; sourceTree = "<group>"; };
 		6FFC8D5F2A8BE96B00866A98 /* purr.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = purr.mp3; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -94,6 +96,7 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				6FF5EA862A95070D00BFC467 /* MediaPlayerApi.swift */,
 				6FF5EA812A94F62B00BFC467 /* charlie.m4a */,
 				6FF5EA822A94F62B00BFC467 /* rjaba.m4a */,
 				6FF5EA802A94F62B00BFC467 /* vasja.m4a */,
@@ -225,6 +228,7 @@
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
+				6FF5EA872A95070D00BFC467 /* MediaPlayerApi.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

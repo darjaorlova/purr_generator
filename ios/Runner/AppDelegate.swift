@@ -3,12 +3,11 @@ import Flutter
 import AVKit
 
 @UIApplicationMain
-@objc class AppDelegate: FlutterAppDelegate {
-    
+@objc class AppDelegate: FlutterAppDelegate, MediaPlayerApi{
     private var eventSink: FlutterEventSink?
     private var progressTimer: Timer?
-    private var audioPlayer: AVAudioPlayer!
-    
+    private var mediaPlayer = PurrMediaPlayer()
+
     override func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -16,99 +15,63 @@ import AVKit
         
         let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
         
-        let flutterPurrChannel = FlutterMethodChannel(name: "flutter_purr_channel", binaryMessenger: controller.binaryMessenger)
         let flutterPurrEventChannel = FlutterEventChannel(name: "flutter_purr_event_channel", binaryMessenger: controller.binaryMessenger)
-        
-        flutterPurrChannel.setMethodCallHandler({
-            (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
-            switch call.method {
-            case "play":
-                if let args = call.arguments as? [String: Any], let fileName = args["file_name"] as? String {
-                        self.play(fileName: fileName)
-                        result("Playing")
-                    } else {
-                        result("Error: File name not provided")
-                    }
-            case "stop":
-                self.stop()
-                result("Paused")
-            case "loop":
-                if let args = call.arguments as? [String: Any], let isLooping = args["looping"] as? Bool {
-                    self.setLooping(isLooping: isLooping)
-                    result("Looping set")
-                }
-            default:
-                result(FlutterMethodNotImplemented)
-                return
-            }
-        })
-        
         flutterPurrEventChannel.setStreamHandler(self)
         
+        MediaPlayerApiSetup.setUp(binaryMessenger: controller.binaryMessenger, api: self)
+        
+        mediaPlayer.onProgressUpdate = { [weak self] progress in
+            self?.eventSink?("progress:\(progress)")
+        }
+
+        mediaPlayer.onFinish = { [weak self] in
+            self?.eventSink?("complete")
+        }
+        
         setAudioSession()
-        
-        GeneratedPluginRegistrant.register(with: self)
-        
+
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
     
-    func setAudioSession() {
+    private func setAudioSession() {
         do {
-            try AVAudioSession.sharedInstance().setCategory(
-                AVAudioSession.Category.playback,
-                mode: AVAudioSession.Mode.default,
-                options: [
-                    AVAudioSession.CategoryOptions.duckOthers
-                ]
-            )
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .default, options: [])
+            try session.setActive(true)
         } catch {
-            print("Failed to set audio session: \(error)")
+            print("Failed to set audio session category.")
         }
     }
     
     func play(fileName: String) {
-        let sound = Bundle.main.path(forResource: fileName, ofType: nil)
-        do {
-            if let soundPath = sound {
-                self.audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: soundPath))
-                audioPlayer?.delegate = self
-                try AVAudioSession.sharedInstance().setActive(true)
-                audioPlayer?.play()
-                startProgressTimer()
-            } else {
-                print("Sound file not found!")
-            }
-        } catch {
-            print("Error playing file: \(error)")
-        }
+        mediaPlayer.play(fileName: fileName)
+        startProgressTimer()
     }
-
+    
     func stop() {
-        audioPlayer?.stop()
-        try? AVAudioSession.sharedInstance().setActive(false)
+        mediaPlayer.stop()
         stopProgressTimer()
-        eventSink?(nil)
     }
-
-    func setLooping(isLooping: Bool) {
-        audioPlayer?.numberOfLoops = isLooping ? -1 : 0
-    }
-
-    @objc func updateProgress() {
-        if let currentPlayer = audioPlayer {
-            let currentTime = currentPlayer.currentTime
-            let progress = currentTime / currentPlayer.duration
-            eventSink?("progress:\(progress)")
-        }
+    
+    func loop(looping: Bool) {
+        mediaPlayer.loop(looping: looping)
     }
 
     func startProgressTimer() {
-        progressTimer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(updateProgress), userInfo: nil, repeats: true)
+        progressTimer = Timer.scheduledTimer(timeInterval: 0.5, target: mediaPlayer, selector: #selector(mediaPlayer.updateProgress), userInfo: nil, repeats: true)
     }
 
     func stopProgressTimer() {
         progressTimer?.invalidate()
         progressTimer = nil
+    }
+
+    @objc func updateProgress() {
+        if let currentPlayer = mediaPlayer.audioPlayer {
+            let currentTime = currentPlayer.currentTime
+            let progress = currentTime / currentPlayer.duration
+            eventSink?("progress:\(progress)")
+        }
     }
 }
 
@@ -130,4 +93,39 @@ extension AppDelegate: AVAudioPlayerDelegate {
         stopProgressTimer()
         eventSink?("complete")
     }
+}
+
+class PurrMediaPlayer: NSObject, AVAudioPlayerDelegate  {
+    var audioPlayer: AVAudioPlayer?
+    var onProgressUpdate: ((Double) -> Void)?
+    var onFinish: (() -> Void)?
+    
+    func play(fileName: String) {
+        guard let soundPath = Bundle.main.path(forResource: fileName, ofType: nil) else {
+            return
+        }
+        audioPlayer = try? AVAudioPlayer(contentsOf: URL(fileURLWithPath: soundPath))
+        audioPlayer?.delegate = self
+        audioPlayer?.play()
+    }
+    
+    func stop() {
+        audioPlayer?.stop()
+        audioPlayer?.currentTime = 0.0
+    }
+    
+    func loop(looping: Bool) {
+        audioPlayer?.numberOfLoops = looping ? -1 : 0
+    }
+    
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        onFinish?()
+    }
+    
+    @objc func updateProgress() {
+        if let currentTime = audioPlayer?.currentTime, let duration = audioPlayer?.duration {
+            onProgressUpdate?(currentTime / duration)
+        }
+    }
+
 }

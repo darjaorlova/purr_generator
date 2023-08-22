@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:purr_generator/cats/api/media_player_api.dart';
 import 'package:purr_generator/cats/model/cat.dart';
 
 class CatPlayerPage extends StatefulWidget {
@@ -12,7 +13,8 @@ class CatPlayerPage extends StatefulWidget {
 }
 
 class _CatPlayerPageState extends State<CatPlayerPage> {
-  static const methodChannel = MethodChannel('flutter_purr_channel');
+  final MediaPlayerApi _mediaPlayerApi = MediaPlayerApi();
+
   static const eventChannel = EventChannel('flutter_purr_event_channel');
 
   bool _playing = false;
@@ -130,11 +132,9 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
 
   Future<void> _triggerPlayer() async {
     if (_playing) {
-      await methodChannel.invokeMethod('stop');
+      _mediaPlayerApi.stop();
     } else {
-      await methodChannel.invokeMethod('play', {
-        'file_name': '${widget.cat.filePrefix}.m4a',
-      });
+      _mediaPlayerApi.play('${widget.cat.filePrefix}.m4a');
     }
 
     setState(() {
@@ -144,12 +144,12 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
 
   Future<void> _stop() async {
     if (_playing) {
-      await methodChannel.invokeMethod('stop');
+      _mediaPlayerApi.stop();
     }
   }
 
   void _toggleLoop() {
-    methodChannel.invokeMethod('loop', {'looping': !_looping});
+    _mediaPlayerApi.loop(!_looping);
     setState(() {
       _looping = !_looping;
     });
