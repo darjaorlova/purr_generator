@@ -8,6 +8,50 @@ import 'dart:typed_data' show Float64List, Int32List, Int64List, Uint8List;
 import 'package:flutter/foundation.dart' show ReadBuffer, WriteBuffer;
 import 'package:flutter/services.dart';
 
+abstract class MediaPlayerProgressApi {
+  static const MessageCodec<Object?> codec = StandardMessageCodec();
+
+  void onProgress(double progress);
+
+  void complete();
+
+  static void setup(MediaPlayerProgressApi? api, {BinaryMessenger? binaryMessenger}) {
+    {
+      final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.purr_generator.MediaPlayerProgressApi.onProgress', codec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        channel.setMessageHandler(null);
+      } else {
+        channel.setMessageHandler((Object? message) async {
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.purr_generator.MediaPlayerProgressApi.onProgress was null.');
+          final List<Object?> args = (message as List<Object?>?)!;
+          final double? arg_progress = (args[0] as double?);
+          assert(arg_progress != null,
+              'Argument for dev.flutter.pigeon.purr_generator.MediaPlayerProgressApi.onProgress was null, expected non-null double.');
+          api.onProgress(arg_progress!);
+          return;
+        });
+      }
+    }
+    {
+      final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.purr_generator.MediaPlayerProgressApi.complete', codec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        channel.setMessageHandler(null);
+      } else {
+        channel.setMessageHandler((Object? message) async {
+          // ignore message
+          api.complete();
+          return;
+        });
+      }
+    }
+  }
+}
+
 class MediaPlayerApi {
   /// Constructor for [MediaPlayerApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default

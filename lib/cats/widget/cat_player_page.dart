@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:purr_generator/cats/api/media_player_api.dart';
 import 'package:purr_generator/cats/model/cat.dart';
 
@@ -12,10 +11,8 @@ class CatPlayerPage extends StatefulWidget {
   State<CatPlayerPage> createState() => _CatPlayerPageState();
 }
 
-class _CatPlayerPageState extends State<CatPlayerPage> {
+class _CatPlayerPageState extends State<CatPlayerPage> implements MediaPlayerProgressApi {
   final MediaPlayerApi _mediaPlayerApi = MediaPlayerApi();
-
-  static const eventChannel = EventChannel('flutter_purr_event_channel');
 
   bool _playing = false;
   bool _looping = false;
@@ -24,27 +21,7 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
   @override
   void initState() {
     super.initState();
-
-    eventChannel.receiveBroadcastStream().listen((dynamic event) {
-      if (event == null) {
-        return;
-      }
-      if (event == "complete") {
-        setState(() {
-          _playing = false;
-          _progress = 0.0;
-        });
-      } else if (event.startsWith("progress:")) {
-        final progressValue = double.parse(event.split(":")[1]);
-        if (context.mounted) {
-          setState(() {
-            _progress = progressValue;
-          });
-        }
-      }
-    }, onError: (dynamic error) {
-      print('Received error: ${error.message}');
-    });
+    MediaPlayerProgressApi.setup(this);
   }
 
   @override
@@ -153,6 +130,25 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
     setState(() {
       _looping = !_looping;
     });
+  }
+
+  @override
+  void complete() {
+    if (mounted) {
+      setState(() {
+        _playing = false;
+        _progress = 0.0;
+      });
+    }
+  }
+
+  @override
+  void onProgress(double progress) {
+    if (mounted) {
+      setState(() {
+        _progress = progress;
+      });
+    }
   }
 }
 

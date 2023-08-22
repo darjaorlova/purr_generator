@@ -41,6 +41,28 @@ class FlutterError (
   override val message: String? = null,
   val details: Any? = null
 ) : Throwable()
+/** Generated class from Pigeon that represents Flutter messages that can be called from Kotlin. */
+@Suppress("UNCHECKED_CAST")
+class MediaPlayerProgressApi(private val binaryMessenger: BinaryMessenger) {
+  companion object {
+    /** The codec used by MediaPlayerProgressApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      StandardMessageCodec()
+    }
+  }
+  fun onProgress(progressArg: Double, callback: () -> Unit) {
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.purr_generator.MediaPlayerProgressApi.onProgress", codec)
+    channel.send(listOf(progressArg)) {
+      callback()
+    }
+  }
+  fun complete(callback: () -> Unit) {
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.purr_generator.MediaPlayerProgressApi.complete", codec)
+    channel.send(null) {
+      callback()
+    }
+  }
+}
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface MediaPlayerApi {
   fun play(fileName: String)

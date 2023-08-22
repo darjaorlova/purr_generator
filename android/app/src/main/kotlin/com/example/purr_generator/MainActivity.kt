@@ -1,6 +1,7 @@
 package com.example.purr_generator
 
 import MediaPlayerApi
+import MediaPlayerProgressApi
 import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.media.MediaPlayer
@@ -8,17 +9,22 @@ import android.os.Handler
 import android.os.Looper
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.plugin.common.EventChannel
 
 class MainActivity : FlutterActivity(), MediaPlayerApi {
-    private val EVENT_CHANNEL = "flutter_purr_event_channel"
-    private lateinit var eventChannel: EventChannel
-
     private val mediaPlayer = PurrMediaPlayer(this)
+    private lateinit var mediaPlayerProgressApi: MediaPlayerProgressApi
 
     init {
         mediaPlayer.onProgressUpdate = { progress ->
-            eventSink?.success("progress:$progress")
+            mediaPlayerProgressApi.onProgress(progress.toDouble()) {
+                println("Progress message sent to Flutter.")
+            }
+        }
+
+        mediaPlayer.onCompletion = {
+            mediaPlayerProgressApi.complete {
+                println("Complete message sent to Flutter.")
+            }
         }
     }
 
@@ -34,22 +40,9 @@ class MainActivity : FlutterActivity(), MediaPlayerApi {
         mediaPlayer.loop(looping)
     }
 
-    private var eventSink: EventChannel.EventSink? = null
-
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        // Set up the EventChannel
-        eventChannel = EventChannel(flutterEngine.dartExecutor.binaryMessenger, EVENT_CHANNEL)
-        eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
-            override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
-                eventSink = events
-            }
-
-            override fun onCancel(arguments: Any?) {
-                eventSink = null
-            }
-        })
-
+        mediaPlayerProgressApi = MediaPlayerProgressApi(flutterEngine.dartExecutor.binaryMessenger)
         MediaPlayerApi.setUp(flutterEngine.dartExecutor.binaryMessenger, this)
     }
 
@@ -63,10 +56,14 @@ class PurrMediaPlayer(private val context: Context) {
     private var mediaPlayer: MediaPlayer? = null
     private val updateHandler = Handler(Looper.getMainLooper())
     var onProgressUpdate: ((Float) -> Unit)? = null
+    var onCompletion: (() -> Unit)? = null
 
     private val updateRunnable = object : Runnable {
         override fun run() {
             mediaPlayer?.let {
+                if (!it.isPlaying) {
+                    return
+                }
                 val progress = it.currentPosition.toFloat() / it.duration.toFloat()
                 onProgressUpdate?.invoke(progress)
                 updateHandler.postDelayed(this, 1000)
@@ -83,6 +80,9 @@ class PurrMediaPlayer(private val context: Context) {
                 descriptor.close()
                 prepare()
                 start()
+                setOnCompletionListener {
+                    onCompletion?.invoke()
+                }
             }
             updateHandler.post(updateRunnable)
         } catch (e: Exception) {
@@ -105,4 +105,3 @@ class PurrMediaPlayer(private val context: Context) {
         stop()
     }
 }
-

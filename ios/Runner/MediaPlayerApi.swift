@@ -33,6 +33,25 @@ private func nilOrValue<T>(_ value: Any?) -> T? {
   if value is NSNull { return nil }
   return value as! T?
 }
+/// Generated class from Pigeon that represents Flutter messages that can be called from Swift.
+class MediaPlayerProgressApi {
+  private let binaryMessenger: FlutterBinaryMessenger
+  init(binaryMessenger: FlutterBinaryMessenger){
+    self.binaryMessenger = binaryMessenger
+  }
+  func onProgress(progress progressArg: Double, completion: @escaping () -> Void) {
+    let channel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.purr_generator.MediaPlayerProgressApi.onProgress", binaryMessenger: binaryMessenger)
+    channel.sendMessage([progressArg] as [Any?]) { _ in
+      completion()
+    }
+  }
+  func complete(completion: @escaping () -> Void) {
+    let channel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.purr_generator.MediaPlayerProgressApi.complete", binaryMessenger: binaryMessenger)
+    channel.sendMessage(nil) { _ in
+      completion()
+    }
+  }
+}
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol MediaPlayerApi {
   func play(fileName: String) throws

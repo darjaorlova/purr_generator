@@ -3,29 +3,25 @@ import Flutter
 import AVKit
 
 @UIApplicationMain
-@objc class AppDelegate: FlutterAppDelegate, MediaPlayerApi{
-    private var eventSink: FlutterEventSink?
+@objc class AppDelegate: FlutterAppDelegate, MediaPlayerApi {
     private var progressTimer: Timer?
     private var mediaPlayer = PurrMediaPlayer()
+    private var mediaPlayerProgressApi: MediaPlayerProgressApi?
 
     override func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-        
         let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
-        
-        let flutterPurrEventChannel = FlutterEventChannel(name: "flutter_purr_event_channel", binaryMessenger: controller.binaryMessenger)
-        flutterPurrEventChannel.setStreamHandler(self)
-        
         MediaPlayerApiSetup.setUp(binaryMessenger: controller.binaryMessenger, api: self)
+        mediaPlayerProgressApi = MediaPlayerProgressApi(binaryMessenger: controller.binaryMessenger)
         
         mediaPlayer.onProgressUpdate = { [weak self] progress in
-            self?.eventSink?("progress:\(progress)")
+            self?.mediaPlayerProgressApi?.onProgress(progress: progress, completion: {})
         }
 
         mediaPlayer.onFinish = { [weak self] in
-            self?.eventSink?("complete")
+            self?.mediaPlayerProgressApi?.complete(completion: {})
         }
         
         setAudioSession()
@@ -65,33 +61,16 @@ import AVKit
         progressTimer?.invalidate()
         progressTimer = nil
     }
-
-    @objc func updateProgress() {
-        if let currentPlayer = mediaPlayer.audioPlayer {
-            let currentTime = currentPlayer.currentTime
-            let progress = currentTime / currentPlayer.duration
-            eventSink?("progress:\(progress)")
-        }
-    }
-}
-
-extension AppDelegate: FlutterStreamHandler {
     
-    func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-        self.eventSink = events
-        return nil
-    }
-
-    func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        self.eventSink = nil
-        return nil
+    func complete() {
+        self.mediaPlayerProgressApi?.complete(completion: {})
     }
 }
 
 extension AppDelegate: AVAudioPlayerDelegate {
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         stopProgressTimer()
-        eventSink?("complete")
+        complete()
     }
 }
 
