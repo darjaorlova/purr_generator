@@ -23,8 +23,12 @@ import AVKit
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             switch call.method {
             case "play":
-                self.play()
-                result("Playing")
+                if let args = call.arguments as? [String: Any], let fileName = args["file_name"] as? String {
+                        self.play(fileName: fileName)
+                        result("Playing")
+                    } else {
+                        result("Error: File name not provided")
+                    }
             case "stop":
                 self.stop()
                 result("Paused")
@@ -42,10 +46,6 @@ import AVKit
         flutterPurrEventChannel.setStreamHandler(self)
         
         setAudioSession()
-        
-        let sound = Bundle.main.path(forResource: "purr", ofType: "mp3")
-        self.audioPlayer = try! AVAudioPlayer(contentsOf: URL(fileURLWithPath:sound!))
-        audioPlayer.delegate = self
         
         GeneratedPluginRegistrant.register(with: self)
         
@@ -66,21 +66,40 @@ import AVKit
         }
     }
     
-    func play() {
-        try! AVAudioSession.sharedInstance().setActive(true)
-        audioPlayer.play()
-        startProgressTimer()
+    func play(fileName: String) {
+        let sound = Bundle.main.path(forResource: fileName, ofType: nil)
+        do {
+            if let soundPath = sound {
+                self.audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: soundPath))
+                audioPlayer?.delegate = self
+                try AVAudioSession.sharedInstance().setActive(true)
+                audioPlayer?.play()
+                startProgressTimer()
+            } else {
+                print("Sound file not found!")
+            }
+        } catch {
+            print("Error playing file: \(error)")
+        }
     }
-    
+
     func stop() {
-        audioPlayer.stop()
-        try! AVAudioSession.sharedInstance().setActive(false)
+        audioPlayer?.stop()
+        try? AVAudioSession.sharedInstance().setActive(false)
         stopProgressTimer()
         eventSink?(nil)
     }
-    
+
     func setLooping(isLooping: Bool) {
-        audioPlayer.numberOfLoops = isLooping ? -1 : 0
+        audioPlayer?.numberOfLoops = isLooping ? -1 : 0
+    }
+
+    @objc func updateProgress() {
+        if let currentPlayer = audioPlayer {
+            let currentTime = currentPlayer.currentTime
+            let progress = currentTime / currentPlayer.duration
+            eventSink?("progress:\(progress)")
+        }
     }
 
     func startProgressTimer() {
@@ -90,12 +109,6 @@ import AVKit
     func stopProgressTimer() {
         progressTimer?.invalidate()
         progressTimer = nil
-    }
-    
-    @objc func updateProgress() {
-        let currentTime = audioPlayer.currentTime
-        let progress = currentTime / audioPlayer.duration
-        eventSink?("progress:\(progress)")
     }
 }
 

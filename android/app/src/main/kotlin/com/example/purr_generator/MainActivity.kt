@@ -1,13 +1,14 @@
 package com.example.purr_generator
 
+import android.content.res.AssetFileDescriptor
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
-import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+
 
 class MainActivity : FlutterActivity() {
     private val METHOD_CHANNEL = "flutter_purr_channel"
@@ -19,19 +20,21 @@ class MainActivity : FlutterActivity() {
 
     private val updateRunnable = object : Runnable {
         override fun run() {
-            if (mediaPlayer == null) {
-                return
+            try {
+                if (mediaPlayer != null && mediaPlayer!!.isPlaying) {
+                    val progress = mediaPlayer!!.currentPosition.toFloat() / mediaPlayer!!.duration.toFloat()
+                    eventSink?.success("progress:$progress")
+                    updateHandler.postDelayed(this, 1000)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-            val progress =
-                mediaPlayer!!.currentPosition.toFloat() / mediaPlayer!!.duration.toFloat()
-            eventSink?.success("progress:$progress")
-            updateHandler.postDelayed(this, 1000)
         }
     }
 
     private var eventSink: EventChannel.EventSink? = null
 
-    override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
         // Set up the MethodChannel
@@ -40,8 +43,11 @@ class MainActivity : FlutterActivity() {
         methodChannel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "play" -> {
-                    play()
-                    result.success(null)
+                    val fileName = call.argument<String>("file_name")
+                    fileName?.let {
+                        play(it)
+                        result.success(null)
+                    } ?: result.error("INVALID", "file name is null", null)
                 }
                 "stop" -> {
                     stop()
@@ -73,20 +79,40 @@ class MainActivity : FlutterActivity() {
         })
     }
 
-    private fun play() {
+    private fun play(fileName: String) {
         mediaPlayer?.release()
-        mediaPlayer = null
-        mediaPlayer = MediaPlayer.create(this, R.raw.purr)
-        mediaPlayer?.setOnCompletionListener {
-            eventSink?.success("complete")
+        mediaPlayer = MediaPlayer()
+        try {
+            val descriptor: AssetFileDescriptor = assets.openFd(fileName)
+            mediaPlayer?.apply {
+                setDataSource(descriptor.fileDescriptor, descriptor.startOffset, descriptor.length)
+                descriptor.close()
+
+                prepare()
+
+                setOnCompletionListener {
+                    eventSink?.success("complete")
+                    updateHandler.removeCallbacks(updateRunnable)
+                    it?.release()
+                }
+
+                start()
+                updateHandler.post(updateRunnable)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-        updateHandler.post(updateRunnable)
-        mediaPlayer?.start()
     }
 
     private fun stop() {
-        mediaPlayer?.stop()
         updateHandler.removeCallbacks(updateRunnable)
+        mediaPlayer?.let {
+            if (it.isPlaying) {
+                it.stop()
+            }
+            it.release()
+        }
+        mediaPlayer = null
     }
 
     private fun loop(isLooping: Boolean) {
@@ -94,9 +120,14 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         updateHandler.removeCallbacks(updateRunnable)
-        mediaPlayer?.release()
+        mediaPlayer?.let {
+            if (it.isPlaying) {
+                it.stop()
+            }
+            it.release()
+        }
         mediaPlayer = null
+        super.onDestroy()
     }
 }

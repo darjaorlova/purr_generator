@@ -34,9 +34,11 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
         });
       } else if (event.startsWith("progress:")) {
         final progressValue = double.parse(event.split(":")[1]);
-        setState(() {
-          _progress = progressValue;
-        });
+        if (context.mounted) {
+          setState(() {
+            _progress = progressValue;
+          });
+        }
       }
     }, onError: (dynamic error) {
       print('Received error: ${error.message}');
@@ -120,16 +122,30 @@ class _CatPlayerPageState extends State<CatPlayerPage> {
     );
   }
 
+  @override
+  void dispose() {
+    _stop();
+    super.dispose();
+  }
+
   Future<void> _triggerPlayer() async {
     if (_playing) {
       await methodChannel.invokeMethod('stop');
     } else {
-      await methodChannel.invokeMethod('play');
+      await methodChannel.invokeMethod('play', {
+        'file_name': '${widget.cat.filePrefix}.m4a',
+      });
     }
 
     setState(() {
       _playing = !_playing;
     });
+  }
+
+  Future<void> _stop() async {
+    if (_playing) {
+      await methodChannel.invokeMethod('stop');
+    }
   }
 
   void _toggleLoop() {
