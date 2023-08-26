@@ -9,6 +9,9 @@ import android.os.Handler
 import android.os.Looper
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class MainActivity : FlutterActivity(), MediaPlayerApi {
     private val mediaPlayer = PurrMediaPlayer(this)
@@ -16,6 +19,12 @@ class MainActivity : FlutterActivity(), MediaPlayerApi {
 
     init {
         mediaPlayer.onProgressUpdate = { progress ->
+            /*GlobalScope.launch(Dispatchers.IO) {
+                mediaPlayerProgressApi.onProgress(progress.toDouble()) {
+                    println("Progress message sent to Flutter.")
+                }
+            }*/
+
             mediaPlayerProgressApi.onProgress(progress.toDouble()) {
                 println("Progress message sent to Flutter.")
             }
@@ -81,7 +90,9 @@ class PurrMediaPlayer(private val context: Context) {
                 prepare()
                 start()
                 setOnCompletionListener {
-                    onCompletion?.invoke()
+                    if (!it.isLooping) {
+                        onCompletion?.invoke()
+                    }
                 }
             }
             updateHandler.post(updateRunnable)
