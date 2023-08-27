@@ -1,8 +1,5 @@
 package com.example.purr_generator
 
-import MediaFile
-import MediaPlayerApi
-import MediaPlayerProgressApi
 import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.media.MediaPlayer
