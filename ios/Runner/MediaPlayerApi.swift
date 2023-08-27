@@ -33,6 +33,118 @@ private func nilOrValue<T>(_ value: Any?) -> T? {
   if value is NSNull { return nil }
   return value as! T?
 }
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct MediaFile {
+  var fileName: String
+
+  static func fromList(_ list: [Any?]) -> MediaFile? {
+    let fileName = list[0] as! String
+
+    return MediaFile(
+      fileName: fileName
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      fileName,
+    ]
+  }
+}
+private class MediaPlayerApiCodecReader: FlutterStandardReader {
+  override func readValue(ofType type: UInt8) -> Any? {
+    switch type {
+      case 128:
+        return MediaFile.fromList(self.readValue() as! [Any?])
+      default:
+        return super.readValue(ofType: type)
+    }
+  }
+}
+
+private class MediaPlayerApiCodecWriter: FlutterStandardWriter {
+  override func writeValue(_ value: Any) {
+    if let value = value as? MediaFile {
+      super.writeByte(128)
+      super.writeValue(value.toList())
+    } else {
+      super.writeValue(value)
+    }
+  }
+}
+
+private class MediaPlayerApiCodecReaderWriter: FlutterStandardReaderWriter {
+  override func reader(with data: Data) -> FlutterStandardReader {
+    return MediaPlayerApiCodecReader(data: data)
+  }
+
+  override func writer(with data: NSMutableData) -> FlutterStandardWriter {
+    return MediaPlayerApiCodecWriter(data: data)
+  }
+}
+
+class MediaPlayerApiCodec: FlutterStandardMessageCodec {
+  static let shared = MediaPlayerApiCodec(readerWriter: MediaPlayerApiCodecReaderWriter())
+}
+
+/// Generated protocol from Pigeon that represents a handler of messages from Flutter.
+protocol MediaPlayerApi {
+  func play(file: MediaFile) throws -> Bool
+  func stop() throws
+  func loop(looping: Bool) throws
+}
+
+/// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
+class MediaPlayerApiSetup {
+  /// The codec used by MediaPlayerApi.
+  static var codec: FlutterStandardMessageCodec { MediaPlayerApiCodec.shared }
+  /// Sets up an instance of `MediaPlayerApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: MediaPlayerApi?) {
+    let playChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.purr_generator.MediaPlayerApi.play", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      playChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let fileArg = args[0] as! MediaFile
+        do {
+          let result = try api.play(file: fileArg)
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      playChannel.setMessageHandler(nil)
+    }
+    let stopChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.purr_generator.MediaPlayerApi.stop", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      stopChannel.setMessageHandler { _, reply in
+        do {
+          try api.stop()
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      stopChannel.setMessageHandler(nil)
+    }
+    let loopChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.purr_generator.MediaPlayerApi.loop", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      loopChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let loopingArg = args[0] as! Bool
+        do {
+          try api.loop(looping: loopingArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      loopChannel.setMessageHandler(nil)
+    }
+  }
+}
 /// Generated class from Pigeon that represents Flutter messages that can be called from Swift.
 class MediaPlayerProgressApi {
   private let binaryMessenger: FlutterBinaryMessenger
@@ -49,63 +161,6 @@ class MediaPlayerProgressApi {
     let channel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.purr_generator.MediaPlayerProgressApi.complete", binaryMessenger: binaryMessenger)
     channel.sendMessage(nil) { _ in
       completion()
-    }
-  }
-}
-/// Generated protocol from Pigeon that represents a handler of messages from Flutter.
-protocol MediaPlayerApi {
-  func play(fileName: String) throws
-  func stop() throws
-  func loop(looping: Bool) throws
-}
-
-/// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
-class MediaPlayerApiSetup {
-  /// The codec used by MediaPlayerApi.
-  /// Sets up an instance of `MediaPlayerApi` to handle messages through the `binaryMessenger`.
-  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: MediaPlayerApi?) {
-    let playChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.purr_generator.MediaPlayerApi.play", binaryMessenger: binaryMessenger)
-    if let api = api {
-      playChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let fileNameArg = args[0] as! String
-        do {
-          try api.play(fileName: fileNameArg)
-          reply(wrapResult(nil))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      playChannel.setMessageHandler(nil)
-    }
-    let stopChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.purr_generator.MediaPlayerApi.stop", binaryMessenger: binaryMessenger)
-    if let api = api {
-      stopChannel.setMessageHandler { _, reply in
-        do {
-          try api.stop()
-          reply(wrapResult(nil))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      stopChannel.setMessageHandler(nil)
-    }
-    let loopChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.purr_generator.MediaPlayerApi.loop", binaryMessenger: binaryMessenger)
-    if let api = api {
-      loopChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let loopingArg = args[0] as! Bool
-        do {
-          try api.loop(looping: loopingArg)
-          reply(wrapResult(nil))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      loopChannel.setMessageHandler(nil)
     }
   }
 }

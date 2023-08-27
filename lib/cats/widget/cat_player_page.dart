@@ -109,9 +109,13 @@ class _CatPlayerPageState extends State<CatPlayerPage> implements MediaPlayerPro
 
   Future<void> _triggerPlayer() async {
     if (_playing) {
-      _mediaPlayerApi.stop();
+      await _mediaPlayerApi.stop();
     } else {
-      _mediaPlayerApi.play('${widget.cat.filePrefix}.m4a');
+      await _mediaPlayerApi.play(
+        MediaFile(
+          fileName: '${widget.cat.filePrefix}.m4a',
+        ),
+      );
     }
 
     setState(() {

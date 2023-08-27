@@ -1,5 +1,6 @@
 package com.example.purr_generator
 
+import MediaFile
 import MediaPlayerApi
 import MediaPlayerProgressApi
 import android.content.Context
@@ -37,8 +38,9 @@ class MainActivity : FlutterActivity(), MediaPlayerApi {
         }
     }
 
-    override fun play(fileName: String) {
-        mediaPlayer.play(fileName)
+    override fun play(file: MediaFile): Boolean {
+        mediaPlayer.play(file.fileName)
+        return true
     }
 
     override fun stop() {

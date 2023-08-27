@@ -41,38 +41,58 @@ class FlutterError (
   override val message: String? = null,
   val details: Any? = null
 ) : Throwable()
-/** Generated class from Pigeon that represents Flutter messages that can be called from Kotlin. */
-@Suppress("UNCHECKED_CAST")
-class MediaPlayerProgressApi(private val binaryMessenger: BinaryMessenger) {
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class MediaFile (
+  val fileName: String
+
+) {
   companion object {
-    /** The codec used by MediaPlayerProgressApi. */
-    val codec: MessageCodec<Any?> by lazy {
-      StandardMessageCodec()
+    @Suppress("UNCHECKED_CAST")
+    fun fromList(list: List<Any?>): MediaFile {
+      val fileName = list[0] as String
+      return MediaFile(fileName)
     }
   }
-  fun onProgress(progressArg: Double, callback: () -> Unit) {
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.purr_generator.MediaPlayerProgressApi.onProgress", codec)
-    channel.send(listOf(progressArg)) {
-      callback()
+  fun toList(): List<Any?> {
+    return listOf<Any?>(
+      fileName,
+    )
+  }
+}
+@Suppress("UNCHECKED_CAST")
+private object MediaPlayerApiCodec : StandardMessageCodec() {
+  override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
+    return when (type) {
+      128.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          MediaFile.fromList(it)
+        }
+      }
+      else -> super.readValueOfType(type, buffer)
     }
   }
-  fun complete(callback: () -> Unit) {
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.purr_generator.MediaPlayerProgressApi.complete", codec)
-    channel.send(null) {
-      callback()
+  override fun writeValue(stream: ByteArrayOutputStream, value: Any?)   {
+    when (value) {
+      is MediaFile -> {
+        stream.write(128)
+        writeValue(stream, value.toList())
+      }
+      else -> super.writeValue(stream, value)
     }
   }
 }
+
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface MediaPlayerApi {
-  fun play(fileName: String)
+  fun play(file: MediaFile): Boolean
   fun stop()
   fun loop(looping: Boolean)
 
   companion object {
     /** The codec used by MediaPlayerApi. */
     val codec: MessageCodec<Any?> by lazy {
-      StandardMessageCodec()
+      MediaPlayerApiCodec
     }
     /** Sets up an instance of `MediaPlayerApi` to handle messages through the `binaryMessenger`. */
     @Suppress("UNCHECKED_CAST")
@@ -82,11 +102,10 @@ interface MediaPlayerApi {
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val fileNameArg = args[0] as String
+            val fileArg = args[0] as MediaFile
             var wrapped: List<Any?>
             try {
-              api.play(fileNameArg)
-              wrapped = listOf<Any?>(null)
+              wrapped = listOf<Any?>(api.play(fileArg))
             } catch (exception: Throwable) {
               wrapped = wrapError(exception)
             }
@@ -132,6 +151,28 @@ interface MediaPlayerApi {
           channel.setMessageHandler(null)
         }
       }
+    }
+  }
+}
+/** Generated class from Pigeon that represents Flutter messages that can be called from Kotlin. */
+@Suppress("UNCHECKED_CAST")
+class MediaPlayerProgressApi(private val binaryMessenger: BinaryMessenger) {
+  companion object {
+    /** The codec used by MediaPlayerProgressApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      StandardMessageCodec()
+    }
+  }
+  fun onProgress(progressArg: Double, callback: () -> Unit) {
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.purr_generator.MediaPlayerProgressApi.onProgress", codec)
+    channel.send(listOf(progressArg)) {
+      callback()
+    }
+  }
+  fun complete(callback: () -> Unit) {
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.purr_generator.MediaPlayerProgressApi.complete", codec)
+    channel.send(null) {
+      callback()
     }
   }
 }

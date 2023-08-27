@@ -39,9 +39,10 @@ import AVKit
         }
     }
     
-    func play(fileName: String) {
-        mediaPlayer.play(fileName: fileName)
+    func play(file: MediaFile) -> Bool {
+        mediaPlayer.play(fileName: file.fileName)
         startProgressTimer()
+        return true
     }
     
     func stop() {
