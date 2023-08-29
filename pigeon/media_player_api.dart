@@ -10,9 +10,12 @@ import 'package:pigeon/pigeon.dart';
     ),
     swiftOut: 'ios/Runner/MediaPlayerApi.swift',
     dartPackageName: 'purr_generator',
+    dartTestOut: 'test/cats/api/media_player_api_test.dart',
   ),
 )
-@HostApi()
+@HostApi(
+  dartHostTestHandler: 'MediaPlayerApiTestHandler',
+)
 abstract class MediaPlayerApi {
   bool play(MediaFile file);
 
