@@ -1,5 +1,6 @@
 import 'package:pigeon/pigeon.dart';
 
+// TODO: Add .g. extension to the file names
 @ConfigurePigeon(
   PigeonOptions(
     dartOut: 'lib/cats/api/media_player_api.dart',
