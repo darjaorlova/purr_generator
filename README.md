@@ -1,16 +1,14 @@
-# purr_generator
+This sample app showcases the usage of `pigeon` for my Flutter & Friends talk.
+Disclaimer: the code here is not production-ready, it is a simple demo of the tool.
 
-A new Flutter project.
+Slides: TBA
+Video: TBA
 
-## Getting Started
+Extra resources:
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+https://docs.flutter.dev/platform-integration/platform-channels
+https://pub.dev/packages/pigeon
+https://medium.com/flutter/flutter-platform-channels-ce7f540a104e
+https://youtu.be/bTjLidwxsm0?si=Btosu5N40IGfzATR&t=11
+https://blog.codemagic.io/working-with-native-elements/
+https://medium.com/@lkirill/flutter-pigeon-with-build-runner-686a7ccfb2ca
