@@ -3,7 +3,7 @@ Disclaimer: the code here is not production-ready, it is a simple demo of the to
 
 Slides: TBA
 
-Video: TBA
+Video: https://www.youtube.com/live/Gz0J2Uv6xSI?si=xyukUkRne73OMt_j&t=17686
 
 
 Extra resources:
